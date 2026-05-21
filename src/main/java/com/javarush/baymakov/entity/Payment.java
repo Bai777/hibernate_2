@@ -1,4 +1,4 @@
 package com.javarush.baymakov.entity;
 
-public class Movie {
+public class Payment {
 }
