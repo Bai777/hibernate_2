@@ -20,7 +20,7 @@ public class CinemaService {
             customer.setStore(store);
             customer.setFirstName(firstName);
             customer.setLastName(lastName);
-            ;
+
             customer.setEmail(email);
             customer.setAddress(address);
             customer.setActive(true);
