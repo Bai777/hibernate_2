@@ -8,38 +8,40 @@ import org.hibernate.Transaction;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.function.Consumer;
 
 public class CinemaService {
-    public void createCustomer(String firstName, String lastName, String email,
-                               Address address, Store store) {
+    private void executeInTransaction(Consumer<Session> action) {
         Transaction transaction = null;
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             transaction = session.beginTransaction();
+            action.accept(session);
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) transaction.rollback();
+            throw new RuntimeException("Ошибка выполнения операции", e);
+        }
+    }
 
+
+    public void createCustomer(String firstName, String lastName, String email,
+                               Address address, Store store) {
+        executeInTransaction(session -> {
             Customer customer = new Customer();
             customer.setStore(store);
             customer.setFirstName(firstName);
             customer.setLastName(lastName);
-
             customer.setEmail(email);
             customer.setAddress(address);
             customer.setActive(true);
             customer.setCreateDate(LocalDateTime.now());
             customer.setLastUpdate(LocalDateTime.now());
-
             session.persist(customer);
-            transaction.commit();
-        } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
-            throw new RuntimeException("Ошибка создания покупателя", e);
-        }
+        });
     }
 
     public void returnRental(Short rentalId) {
-        Transaction transaction = null;
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            transaction = session.beginTransaction();
-
+        executeInTransaction(session -> {
             Rental rental = session.get(Rental.class, rentalId);
             if (rental == null || rental.getReturnDate() != null) {
                 throw new RuntimeException("Аренда не найдена или уже возвращена");
@@ -47,21 +49,15 @@ public class CinemaService {
             rental.setReturnDate(LocalDateTime.now());
             rental.setLastUpdate(LocalDateTime.now());
             session.merge(rental);
-
-            transaction.commit();
-        } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
-            throw new RuntimeException("Ошибка возврата фильма", e);
-        }
+        });
     }
 
     public void rentFilm(Short inventoryId, Short customerId, Short staffId, BigDecimal amount) {
-        Transaction transaction = null;
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            transaction = session.beginTransaction();
-
+        executeInTransaction(session -> {
             Inventory inventory = session.get(Inventory.class, inventoryId);
-            if (inventory == null) throw new RuntimeException("Инвентарь не найден");
+            if (inventory == null) {
+                throw new RuntimeException("Инвентарь не найден");
+            }
 
             String hql = "FROM Rental r WHERE r.inventory.id = :invId ORDER BY r.rentalDate DESC";
             Rental lastRental = session.createQuery(hql, Rental.class)
@@ -90,21 +86,13 @@ public class CinemaService {
             payment.setPaymentDate(LocalDateTime.now());
             payment.setLastUpdate(LocalDateTime.now());
             session.persist(payment);
-
-            transaction.commit();
-        } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
-            throw new RuntimeException("Ошибка аренды фильма", e);
-        }
+        });
     }
 
     public void addNewFilm(String title, String description, Language language,
                            Set<Actor> actors, Set<Category> categories,
                            Short storeId) {
-        Transaction transaction = null;
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            transaction = session.beginTransaction();
-
+        executeInTransaction(session -> {
             Film film = new Film();
             film.setTitle(title);
             film.setDescription(description);
@@ -115,7 +103,6 @@ public class CinemaService {
             film.setReplacementCost(new BigDecimal("19.99"));
             film.setRating("PG-13");
             film.setLastUpdate(LocalDateTime.now());
-
             film.setActors(actors);
             film.setCategories(categories);
             session.persist(film);
@@ -125,11 +112,6 @@ public class CinemaService {
             inv.setStore(session.get(Store.class, storeId));
             inv.setLastUpdate(LocalDateTime.now());
             session.persist(inv);
-
-            transaction.commit();
-        } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
-            throw new RuntimeException("Ошибка добавления фильма", e);
-        }
+        });
     }
 }
