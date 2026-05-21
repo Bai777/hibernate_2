@@ -19,6 +19,7 @@ import java.util.Set;
 public class Actor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "actor_id")
     private Short id;
 
     @Column(name = "first_name", nullable = false, length = 45)
