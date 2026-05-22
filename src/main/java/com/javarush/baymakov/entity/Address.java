@@ -24,7 +24,9 @@ public class Address {
     @JoinColumn(name = "city_id")
     private City city;
 
+    @Column(name = "postal_code")
     private String postalCode;
+
     private String phone;
 
     @Column(name = "last_update")

@@ -22,7 +22,8 @@ public class Film {
 
     private String title;
     private String description;
-    @Column(name = "release_year")
+
+    @Column(name = "release_year", columnDefinition = "YEAR")
     private Integer releaseYear;
 
     @ManyToOne
@@ -40,11 +41,17 @@ public class Film {
     private BigDecimal rentalRate;
 
     private Short length;
+
     @Column(name = "replacement_cost")
     private BigDecimal replacementCost;
+
+    @Column(name = "rating", columnDefinition = "ENUM('G','PG','PG-13','R','NC-17')")
     private String rating;
-    @Column(name = "special_features")
+
+    @Column(name = "special_features",
+            columnDefinition = "SET('Trailers','Commentaries','Deleted Scenes','Behind the Scenes')")
     private String specialFeatures;
+
     @Column(name = "last_update")
     private LocalDateTime lastUpdate;
 

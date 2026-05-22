@@ -1,34 +1,29 @@
 package com.javarush.baymakov;
 
 import com.javarush.baymakov.config.HibernateUtil;
-import com.javarush.baymakov.entity.Address;
-import com.javarush.baymakov.entity.Store;
 import com.javarush.baymakov.service.CinemaService;
-import org.hibernate.Session;
 
-public class App
-{
-    public static void main( String[] args )
-    {
-//        CinemaService service = new CinemaService();
-//
-//        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-//            Store store = session.get(Store.class, (short) 1);
-//            Address address = session.get(Address.class, (short) 5); // существующий адрес
-//            service.createCustomer("Иван", "Петров", "ivan@mail.ru", address, store);
-//            System.out.println("Покупатель создан");
-//        }
+import java.math.BigDecimal;
+import java.util.Set;
 
+public class App {
+    public static void main(String[] args) {
+        CinemaService service = new CinemaService();
 
-        // service.returnRental((short) 100);
+        // 1. Создаём покупателя (убедитесь, что store_id=1 и address_id=5 существуют в вашей БД)
+        service.createCustomer("Иван", "Петров", "ivan@mail.ru", (byte) 1, (short) 5);
+        System.out.println("Покупатель создан");
 
-        // service.rentFilm((short) 10, (short) 1, (short) 1, new BigDecimal("2.99"));
+        // 2. Возврат аренды (замените на реальный rental_id из БД)
+        // service.returnRental(100);
 
-        // Language lang = session.get(Language.class, (byte) 1);
-        // Set<Actor> actors = Set.of(session.get(Actor.class, (short) 1));
-        // Set<Category> cats = Set.of(session.get(Category.class, (byte) 1));
-        // service.addNewFilm("Новый фильм", "Описание", lang, actors, cats, (short) 1);
+        // 3. Аренда фильма (inventory_id, customer_id, staff_id, сумма)
+        // service.rentFilm(10, (short) 1, (byte) 1, new BigDecimal("2.99"));
 
-//        HibernateUtil.shutdown();
+        // 4. Добавление нового фильма (language_id, список актёров, категорий, store_id)
+        // service.addNewFilm("Новый фильм", "Описание", (byte) 1,
+        //                    Set.of((short) 1, (short) 2), Set.of((byte) 1), (byte) 1);
+
+        HibernateUtil.shutdown();
     }
 }

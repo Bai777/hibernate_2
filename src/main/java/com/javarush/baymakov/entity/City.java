@@ -16,6 +16,7 @@ public class City {
     @Column(name = "city_id")
     private Short id;
 
+    @Column(name = "city", columnDefinition = "CHAR(50)")
     private String city;
 
     @ManyToOne

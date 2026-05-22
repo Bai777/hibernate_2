@@ -11,22 +11,39 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 public class CinemaService {
+
     private void executeInTransaction(Consumer<Session> action) {
         Transaction transaction = null;
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+        Session session = null;
+        try {
+            session = HibernateUtil.getSessionFactory().openSession();
             transaction = session.beginTransaction();
             action.accept(session);
             transaction.commit();
         } catch (Exception e) {
-            if (transaction != null) transaction.rollback();
+            if (transaction != null) {
+                try {
+                    transaction.rollback();
+                } catch (Exception rollbackEx) {
+                    rollbackEx.printStackTrace();
+                }
+            }
             throw new RuntimeException("Ошибка выполнения операции", e);
+        } finally {
+            if (session != null) {
+                session.close();
+            }
         }
     }
 
-
     public void createCustomer(String firstName, String lastName, String email,
-                               Address address, Store store) {
+                               Byte storeId, Short addressId) {
         executeInTransaction(session -> {
+            Store store = session.get(Store.class, storeId);
+            Address address = session.get(Address.class, addressId);
+            if (store == null || address == null) {
+                throw new RuntimeException("Магазин или адрес не найдены");
+            }
             Customer customer = new Customer();
             customer.setStore(store);
             customer.setFirstName(firstName);
@@ -40,7 +57,7 @@ public class CinemaService {
         });
     }
 
-    public void returnRental(Short rentalId) {
+    public void returnRental(Integer rentalId) {
         executeInTransaction(session -> {
             Rental rental = session.get(Rental.class, rentalId);
             if (rental == null || rental.getReturnDate() != null) {
@@ -52,7 +69,7 @@ public class CinemaService {
         });
     }
 
-    public void rentFilm(Short inventoryId, Short customerId, Short staffId, BigDecimal amount) {
+    public void rentFilm(Integer inventoryId, Short customerId, Byte staffId, BigDecimal amount) {
         executeInTransaction(session -> {
             Inventory inventory = session.get(Inventory.class, inventoryId);
             if (inventory == null) {
@@ -89,10 +106,12 @@ public class CinemaService {
         });
     }
 
-    public void addNewFilm(String title, String description, Language language,
-                           Set<Actor> actors, Set<Category> categories,
-                           Short storeId) {
+    public void addNewFilm(String title, String description, Byte languageId,
+                           Set<Short> actorIds, Set<Byte> categoryIds, Byte storeId) {
         executeInTransaction(session -> {
+            Language language = session.get(Language.class, languageId);
+            if (language == null) throw new RuntimeException("Язык не найден");
+
             Film film = new Film();
             film.setTitle(title);
             film.setDescription(description);
@@ -103,8 +122,16 @@ public class CinemaService {
             film.setReplacementCost(new BigDecimal("19.99"));
             film.setRating("PG-13");
             film.setLastUpdate(LocalDateTime.now());
-            film.setActors(actors);
-            film.setCategories(categories);
+
+            for (Short actorId : actorIds) {
+                Actor actor = session.get(Actor.class, actorId);
+                if (actor != null) film.getActors().add(actor);
+            }
+            for (Byte categoryId : categoryIds) {
+                Category category = session.get(Category.class, categoryId);
+                if (category != null) film.getCategories().add(category);
+            }
+
             session.persist(film);
 
             Inventory inv = new Inventory();

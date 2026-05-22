@@ -18,6 +18,7 @@ public class Category {
     @Column(name = "category_id")
     private Byte id;
 
+    @Column(name = "name", columnDefinition = "CHAR(25)")
     private String name;
 
     @Column(name = "last_update")

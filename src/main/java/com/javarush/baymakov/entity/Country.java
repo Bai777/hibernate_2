@@ -16,6 +16,7 @@ public class Country {
     @Column(name = "country_id")
     private Short id;
 
+    @Column(name = "country", columnDefinition = "CHAR(50)")
     private String country;
 
     @Column(name = "last_update")

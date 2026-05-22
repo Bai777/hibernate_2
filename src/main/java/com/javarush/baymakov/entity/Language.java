@@ -16,6 +16,7 @@ public class Language {
     @Column(name = "language_id")
     private Byte id;
 
+    @Column(name = "name", columnDefinition = "CHAR(20)")
     private String name;
 
     @Column(name = "last_update")
